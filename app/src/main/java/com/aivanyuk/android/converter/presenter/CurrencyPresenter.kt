@@ -6,11 +6,13 @@ import com.aivanyuk.android.converter.view.CurrencyItemView
 import com.aivanyuk.android.converter.view.CurrencyView
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
+import java.text.DecimalFormat
 
 class CurrencyPresenter(val repo: CurrencyRepo) {
 
-    val dataObserver: DataObserver = DataObserver()
-    val compositeDisposable = CompositeDisposable()
+    private val dataObserver: DataObserver = DataObserver()
+    private val compositeDisposable = CompositeDisposable()
+    private val decimalFormat = DecimalFormat("#.00")
 
     init {
         compositeDisposable.add(repo.currencies().subscribeWith(dataObserver))
@@ -33,7 +35,7 @@ class CurrencyPresenter(val repo: CurrencyRepo) {
         val currency = repo.getCurrency(position)
         vh.setImage(currency.flagUrl)
         vh.setName(currency.name)
-        vh.setAmount(currency.amount.toString())
+        vh.setAmount(currency.formattedAmount)
         vh.setDescription(currency.description)
     }
 
