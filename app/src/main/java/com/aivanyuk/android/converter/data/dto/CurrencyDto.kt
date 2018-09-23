@@ -10,4 +10,4 @@ val EUR = CurrencyDto("EUR",
         "European Union",
         1.0f,
         "https://vignette.wikia.nocookie.net/marveldatabase/images/6/6c/European_Union_Flag.png",
-        Transformer.formatAmount(1.0f))
+        Transformer.Formatter.formatAmount(1.0f))

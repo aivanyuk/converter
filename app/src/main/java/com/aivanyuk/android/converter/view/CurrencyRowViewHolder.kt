@@ -23,7 +23,11 @@ class CurrencyRowViewHolder(private val presenter: CurrencyPresenter,
     var url: String = ""
 
     init {
-        input.setOnClickListener { presenter.requestPivot(pos) }
+        input.setOnFocusChangeListener { v, hasFocus ->
+            if (hasFocus) {
+                presenter.requestPivot(pos)
+            }
+        }
     }
 
     override fun setImage(url: String) {

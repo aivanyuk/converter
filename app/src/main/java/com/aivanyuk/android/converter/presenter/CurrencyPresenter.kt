@@ -2,7 +2,6 @@ package com.aivanyuk.android.converter.presenter
 
 import com.aivanyuk.android.converter.data.dto.CurrencyData
 import com.aivanyuk.android.converter.repo.CurrencyRepo
-import com.aivanyuk.android.converter.view.CurrencyAdapter
 import com.aivanyuk.android.converter.view.CurrencyItemView
 import com.aivanyuk.android.converter.view.CurrencyView
 import io.reactivex.disposables.CompositeDisposable
@@ -52,7 +51,7 @@ class CurrencyPresenter(private val repo: CurrencyRepo) {
     }
 
     fun requestPivot(pos: Int) {
-
+        repo.setPivot(pos)
     }
 }
 
@@ -66,7 +65,7 @@ class DataObserver: DisposableObserver<CurrencyData>() {
         } else {
             val v = view
             if (v != null) {
-                if (v.hasData()) {
+                if (v.hasData() && !data.restructured) {
                     v.updateCurrencies(data.viewData)
                 } else {
                     v.displayCurrencies(data.viewData)

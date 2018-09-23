@@ -19,27 +19,30 @@ interface CurrencyRepo {
     fun currencies(): Observable<CurrencyData>
     fun fetchStart()
     fun fetchStop()
+    fun setPivot(pos: Int)
 }
 
 class CurrencyRepoImpl : CurrencyRepo {
-    var sub: Disposable? = null
-    val publisher = PublishSubject.create<CurrencyData>()
 
+    var sub: Disposable? = null
+
+    val publisher = PublishSubject.create<CurrencyData>()
     var cache = CurrencyData(emptyList(), emptyList(), "")
 
     val currencyService by lazy { CurrencyService.create() }
+    val transformer = Transformer()
 
     override fun fetchStart() {
-        sub = Observable.interval(1, TimeUnit.SECONDS).flatMap { currencyService.getCurrencies("EUR") }
+        sub = Observable.interval(2, TimeUnit.SECONDS).flatMap { currencyService.getCurrencies("EUR") }
                 .subscribeOn(Schedulers.io())
-                .map { model: Model.Result -> Transformer.transformData(model) }
+                .map { model: Model.Result -> transformer.transformData(model) }
+                .map { currencies -> transformer.changeViewOrder(currencies)}
                 .onErrorReturn { error -> CurrencyData(emptyList(), emptyList(), error.message) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         { result: CurrencyData? -> emitResult(result) },
                         { error -> emitError(error)})
     }
-
 
     @MainThread
     private fun emitResult(result: CurrencyData?) {
@@ -56,6 +59,7 @@ class CurrencyRepoImpl : CurrencyRepo {
         }
         publisher.onNext(data)
     }
+
 
     @MainThread
     private fun emitError(error: Throwable) {
@@ -74,5 +78,11 @@ class CurrencyRepoImpl : CurrencyRepo {
 
     override fun getCurrency(position: Int): CurrencyDto {
         return cache.currencies[position]
+    }
+
+    override fun setPivot(pos: Int) {
+        val currency = cache.viewData[pos]
+        val indexOfFirst = cache.currencies.indexOfFirst { it.name == currency.name }
+        transformer.pivotPos = indexOfFirst
     }
 }
