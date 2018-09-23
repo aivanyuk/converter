@@ -11,6 +11,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
+import java.util.concurrent.TimeUnit
 
 interface CurrencyRepo {
     fun getCurrency(position: Int): CurrencyDto
@@ -30,7 +31,7 @@ class CurrencyRepoImpl : CurrencyRepo {
     val currencyService by lazy { CurrencyService.create() }
 
     override fun fetchStart() {
-        sub = currencyService.getCurrencies("EUR")
+        sub = Observable.interval(1, TimeUnit.SECONDS).flatMap { currencyService.getCurrencies("EUR") }
                 .subscribeOn(Schedulers.io())
                 .map { model: Model.Result -> Transformer.transformData(model) }
                 .onErrorReturn { error -> CurrencyData(emptyList(), error.message) }
