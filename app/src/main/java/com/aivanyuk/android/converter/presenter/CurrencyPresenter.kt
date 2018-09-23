@@ -1,13 +1,66 @@
 package com.aivanyuk.android.converter.presenter
 
+import com.aivanyuk.android.converter.data.dto.CurrencyData
 import com.aivanyuk.android.converter.repo.CurrencyRepo
+import com.aivanyuk.android.converter.view.CurrencyItemView
 import com.aivanyuk.android.converter.view.CurrencyView
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.observers.DisposableObserver
 
 class CurrencyPresenter(val repo: CurrencyRepo) {
-    fun showCurrency() = "${repo.giveCurrency()} from $this"
-    private lateinit var view: CurrencyView
+
+    val dataObserver: DataObserver = DataObserver()
+    val compositeDisposable = CompositeDisposable()
+
+    init {
+        compositeDisposable.add(repo.currencies().subscribeWith(dataObserver))
+    }
+
+    fun create() {
+        repo.fetchStart()
+    }
 
     fun setView(view: CurrencyView) {
-        this.view = view
+        dataObserver.view = view
+    }
+
+    fun destroy() {
+        repo.fetchStop()
+        compositeDisposable.clear()
+    }
+
+    fun onBindCurrencyView(vh: CurrencyItemView, position: Int) {
+        val currency = repo.getCurrency(position)
+        vh.setImage(currency.flagUrl)
+        vh.setName(currency.name)
+        vh.setAmount(currency.amount.toString())
+        vh.setDescription(currency.description)
+    }
+
+    fun getItemCount(): Int {
+        return repo.getItemCount()
+    }
+}
+
+class DataObserver: DisposableObserver<CurrencyData>() {
+    var view: CurrencyView? = null
+    override fun onComplete() {
+
+    }
+
+    override fun onNext(data: CurrencyData) {
+        if (data.error != null) {
+            showError(data.error)
+        } else {
+            view?.displayCurrencies()
+        }
+    }
+
+    override fun onError(e: Throwable) {
+        showError(e.message)
+    }
+
+    private fun showError(message: String?) {
+        view?.showError(message ?: "No description")
     }
 }

@@ -9,5 +9,6 @@ const val UI_SCOPE = "ui"
 val appModule = module {
     single<CurrencyRepo> { CurrencyRepoImpl() }
     scope(UI_SCOPE) { CurrencyPresenter(get()) }
+    single<ImageLoader> { ImageLoaderImpl()}
 }
 

@@ -7,8 +7,8 @@
 
     <ImageView
         android:id="@+id/icon"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="@dimen/image_flag_size_w"
+        android:layout_height="@dimen/image_flag_size_h"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintTop_toBottomOf="parent"
@@ -29,6 +29,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/text_description"
         app:layout_goneMarginStart="8dp"
+        android:textStyle="bold"
+
         tools:text="GBP" />
 
     <TextView
