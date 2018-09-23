@@ -5,4 +5,5 @@ interface CurrencyItemView {
     fun setName(text: CharSequence)
     fun setDescription(text: CharSequence)
     fun setAmount(text: CharSequence)
+    fun setPosition(position: Int)
 }

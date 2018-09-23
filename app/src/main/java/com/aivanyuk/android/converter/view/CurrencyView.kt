@@ -13,17 +13,25 @@ class CurrencyView(val context: MainActivity, currencyPresenter: CurrencyPresent
     private val listAdapter: CurrencyAdapter
 
     init {
-
+        list.itemAnimator
         list.layoutManager = LinearLayoutManager(context)
         listAdapter = CurrencyAdapter(currencyPresenter, imageLoader)
         list.adapter = listAdapter
     }
 
-    fun displayCurrencies() {
-        listAdapter.notifyDataSetChanged()
+    fun displayCurrencies(list: List<CurrencyViewData>) {
+        listAdapter.submitList(list)
+    }
+
+    fun updateCurrencies(viewData: List<CurrencyViewData>) {
+        listAdapter.notifyItemRangeChanged(0, viewData.size, CurrencyAdapter.PAYLOADS.UPDATE_AMOUNT)
     }
 
     fun showError(message: String) {
         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+    }
+
+    fun hasData(): Boolean {
+        return listAdapter.itemCount != 0
     }
 }

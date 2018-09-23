@@ -2,6 +2,7 @@ package com.aivanyuk.android.converter.data.dto
 
 import com.aivanyuk.android.converter.data.data.Flags
 import com.aivanyuk.android.converter.data.data.Model
+import com.aivanyuk.android.converter.view.CurrencyViewData
 import java.text.DecimalFormat
 
 object Transformer {
@@ -13,13 +14,14 @@ object Transformer {
         } else {
             result = listOf(EUR) + list
         }
-        return CurrencyData(result)
+        val viewData = result.map { CurrencyViewData(it.name, it.formattedAmount) }
+        return CurrencyData(result, viewData)
     }
 
     private fun getFlag(key: String): String {
         return Flags.get(key)
     }
 
-    val AMOUNT_FORMAT = DecimalFormat("#.00")
+    private val AMOUNT_FORMAT = DecimalFormat("#.00")
     fun formatAmount(amount: Float) = AMOUNT_FORMAT.format(amount)!!
 }

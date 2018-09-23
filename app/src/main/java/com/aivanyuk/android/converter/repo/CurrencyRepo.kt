@@ -15,18 +15,17 @@ import java.util.concurrent.TimeUnit
 
 interface CurrencyRepo {
     fun getCurrency(position: Int): CurrencyDto
-    fun getItemCount(): Int
+    fun getCached(): CurrencyData
     fun currencies(): Observable<CurrencyData>
     fun fetchStart()
     fun fetchStop()
-
 }
 
 class CurrencyRepoImpl : CurrencyRepo {
     var sub: Disposable? = null
     val publisher = PublishSubject.create<CurrencyData>()
 
-    var cache = emptyList<CurrencyDto>()
+    var cache = CurrencyData(emptyList(), emptyList(), "")
 
     val currencyService by lazy { CurrencyService.create() }
 
@@ -34,7 +33,7 @@ class CurrencyRepoImpl : CurrencyRepo {
         sub = Observable.interval(1, TimeUnit.SECONDS).flatMap { currencyService.getCurrencies("EUR") }
                 .subscribeOn(Schedulers.io())
                 .map { model: Model.Result -> Transformer.transformData(model) }
-                .onErrorReturn { error -> CurrencyData(emptyList(), error.message) }
+                .onErrorReturn { error -> CurrencyData(emptyList(), emptyList(), error.message) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         { result: CurrencyData? -> emitResult(result) },
@@ -46,14 +45,14 @@ class CurrencyRepoImpl : CurrencyRepo {
     private fun emitResult(result: CurrencyData?) {
         val data: CurrencyData
         if (result != null && result.error == null) {
-            cache = result.currencies
-            data = if (cache.isEmpty()) {
-                CurrencyData(emptyList(), "No data")
+            cache = result
+            data = if (cache.currencies.isEmpty()) {
+                CurrencyData(emptyList(), emptyList(),"No data")
             } else {
                 result
             }
         } else {
-            data = CurrencyData(emptyList(), result?.error)
+            data = CurrencyData(emptyList(), emptyList(), result?.error)
         }
         publisher.onNext(data)
     }
@@ -70,11 +69,10 @@ class CurrencyRepoImpl : CurrencyRepo {
     override fun currencies(): Observable<CurrencyData> {
         return publisher
     }
-    override fun getItemCount(): Int {
-        return cache.size
-    }
+
+    override fun getCached(): CurrencyData = cache
 
     override fun getCurrency(position: Int): CurrencyDto {
-        return cache[position]
+        return cache.currencies[position]
     }
 }

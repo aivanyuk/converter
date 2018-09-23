@@ -1,3 +1,5 @@
 package com.aivanyuk.android.converter.data.dto
 
-class CurrencyData(val currencies: List<CurrencyDto>, val error: String? = null)
+import com.aivanyuk.android.converter.view.CurrencyViewData
+
+class CurrencyData(val currencies: List<CurrencyDto>, val viewData: List<CurrencyViewData>, val error: String? = null)
