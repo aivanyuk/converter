@@ -4,44 +4,45 @@ import android.support.annotation.MainThread
 import com.aivanyuk.android.converter.data.api.CurrencyService
 import com.aivanyuk.android.converter.data.data.Model
 import com.aivanyuk.android.converter.data.dto.CurrencyData
-import com.aivanyuk.android.converter.data.dto.CurrencyDto
-import com.aivanyuk.android.converter.data.dto.Transformer
+import com.aivanyuk.android.converter.view.CurrencyViewData
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import java.util.concurrent.TimeUnit
 
 interface CurrencyRepo {
-    fun getCurrency(position: Int): CurrencyDto
     fun getCached(): CurrencyData
     fun currencies(): Observable<CurrencyData>
     fun fetchStart()
     fun fetchStop()
     fun setPivot(pos: Int)
+    fun getViewData(position: Int): CurrencyViewData
 }
 
-class CurrencyRepoImpl : CurrencyRepo {
+class CurrencyRepoImpl(private val transformer: Transformer) : CurrencyRepo {
+    override fun getViewData(position: Int) = cache.viewData[position]
 
-    var sub: Disposable? = null
+    var sub: CompositeDisposable = CompositeDisposable()
 
     val publisher = PublishSubject.create<CurrencyData>()
-    var cache = CurrencyData(emptyList(), emptyList(), "")
+    var cache = CurrencyData.EMPTY
 
     val currencyService by lazy { CurrencyService.create() }
-    val transformer = Transformer()
 
     override fun fetchStart() {
-        sub = Observable.interval(2, TimeUnit.SECONDS).flatMap { currencyService.getCurrencies("EUR") }
+        val disposable = Observable.interval(0, 2, TimeUnit.SECONDS).flatMap { currencyService.getCurrencies("EUR") }
                 .subscribeOn(Schedulers.io())
-                .map { model: Model.Result -> transformer.transformData(model) }
-                .map { currencies -> transformer.changeViewOrder(currencies)}
-                .onErrorReturn { error -> CurrencyData(emptyList(), emptyList(), error.message) }
+                .map { model: Model.Result -> transformer.transformModel(model) }
+                .map { currencies -> transformer.transformViewData(currencies) }
+                .onErrorReturn { error -> CurrencyData.errorValue(error.message) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         { result: CurrencyData? -> emitResult(result) },
-                        { error -> emitError(error)})
+                        { error -> emitError(error) }
+                )
+        sub.add(disposable)
     }
 
     @MainThread
@@ -50,12 +51,12 @@ class CurrencyRepoImpl : CurrencyRepo {
         if (result != null && result.error == null) {
             cache = result
             data = if (cache.currencies.isEmpty()) {
-                CurrencyData(emptyList(), emptyList(),"No data")
+                CurrencyData.errorValue("No data")
             } else {
                 result
             }
         } else {
-            data = CurrencyData(emptyList(), emptyList(), result?.error)
+            data = CurrencyData.errorValue(result?.error)
         }
         publisher.onNext(data)
     }
@@ -67,7 +68,7 @@ class CurrencyRepoImpl : CurrencyRepo {
     }
 
     override fun fetchStop() {
-        sub?.dispose()
+        sub.clear()
     }
 
     override fun currencies(): Observable<CurrencyData> {
@@ -76,13 +77,19 @@ class CurrencyRepoImpl : CurrencyRepo {
 
     override fun getCached(): CurrencyData = cache
 
-    override fun getCurrency(position: Int): CurrencyDto {
-        return cache.currencies[position]
-    }
-
     override fun setPivot(pos: Int) {
-        val currency = cache.viewData[pos]
-        val indexOfFirst = cache.currencies.indexOfFirst { it.name == currency.name }
-        transformer.pivotPos = indexOfFirst
+        val disposable = Observable.just(cache)
+                .subscribeOn(Schedulers.computation())
+                .doOnNext { data ->
+                    val currency = data.viewData[pos]
+                    val indexOfFirst = data.currencies.indexOfFirst { it.name == currency.name }
+                    transformer.setPivot(indexOfFirst)
+                }
+                .map { transformer.transformViewData(it) }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    emitResult(it)
+                }
+        sub.add(disposable)
     }
 }

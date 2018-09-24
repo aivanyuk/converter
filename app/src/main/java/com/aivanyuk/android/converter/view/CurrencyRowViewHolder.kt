@@ -1,6 +1,8 @@
 package com.aivanyuk.android.converter.view
 
+import android.annotation.SuppressLint
 import android.support.v7.widget.RecyclerView
+import android.view.MotionEvent
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
@@ -9,6 +11,8 @@ import com.aivanyuk.android.converter.ImageLoader
 import com.aivanyuk.android.converter.R
 import com.aivanyuk.android.converter.presenter.CurrencyPresenter
 
+
+@SuppressLint("ClickableViewAccessibility")
 class CurrencyRowViewHolder(private val presenter: CurrencyPresenter,
                             private val imageLoader: ImageLoader,
                             itemView: View) : RecyclerView.ViewHolder(itemView), CurrencyItemView {
@@ -22,12 +26,18 @@ class CurrencyRowViewHolder(private val presenter: CurrencyPresenter,
     var pos: Int = 0
     var url: String = ""
 
+
     init {
-        input.setOnFocusChangeListener { v, hasFocus ->
-            if (hasFocus) {
-                presenter.requestPivot(pos)
+        input.setOnTouchListener { _: View, event: MotionEvent ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    presenter.requestPivot(pos)
+                    return@setOnTouchListener true
+                }
+                else -> return@setOnTouchListener false
             }
         }
+
     }
 
     override fun setImage(url: String) {

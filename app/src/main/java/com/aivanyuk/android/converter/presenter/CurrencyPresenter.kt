@@ -1,6 +1,7 @@
 package com.aivanyuk.android.converter.presenter
 
 import com.aivanyuk.android.converter.data.dto.CurrencyData
+import com.aivanyuk.android.converter.data.dto.Status
 import com.aivanyuk.android.converter.repo.CurrencyRepo
 import com.aivanyuk.android.converter.view.CurrencyItemView
 import com.aivanyuk.android.converter.view.CurrencyView
@@ -12,6 +13,7 @@ class CurrencyPresenter(private val repo: CurrencyRepo) {
     private val dataObserver: DataObserver = DataObserver()
     private val compositeDisposable = CompositeDisposable()
     private lateinit var view: CurrencyView
+    private val editorPos = 0
 
     init {
         compositeDisposable.add(repo.currencies().subscribeWith(dataObserver))
@@ -26,7 +28,7 @@ class CurrencyPresenter(private val repo: CurrencyRepo) {
         dataObserver.view = view
         val cached = repo.getCached()
         if (!cached.currencies.isEmpty()) {
-            view.displayCurrencies(cached.viewData)
+            view.displayCurrencies()
         }
     }
 
@@ -36,40 +38,50 @@ class CurrencyPresenter(private val repo: CurrencyRepo) {
     }
 
     fun onFullBind(vh: CurrencyItemView, position: Int) {
-        val currency = repo.getCurrency(position)
+        val currency = repo.getViewData(position)
 
         vh.setPosition(position)
         vh.setImage(currency.flagUrl)
         vh.setName(currency.name)
-        vh.setAmount(currency.formattedAmount)
+        vh.setAmount(currency.amount)
         vh.setDescription(currency.description)
     }
 
+
     fun onUpdateBind(vh: CurrencyItemView, position: Int) {
-        val currency = repo.getCurrency(position)
-        vh.setAmount(currency.formattedAmount)
+        if (position != editorPos) {
+            val currency = repo.getViewData(position)
+            vh.setAmount(currency.amount)
+        }
     }
 
     fun requestPivot(pos: Int) {
         repo.setPivot(pos)
     }
+
+    fun getItemCount(): Int {
+        return repo.getCached().viewData.size
+    }
+
+    fun getItemId(position: Int): Long {
+        return repo.getCached().viewData[position].name.hashCode().toLong()
+    }
 }
 
-class DataObserver: DisposableObserver<CurrencyData>() {
+class DataObserver : DisposableObserver<CurrencyData>() {
     var view: CurrencyView? = null
     override fun onComplete() {}
 
     override fun onNext(data: CurrencyData) {
-        if (data.error != null) {
-            showError(data.error)
-        } else {
-            val v = view
-            if (v != null) {
-                if (v.hasData() && !data.restructured) {
-                    v.updateCurrencies(data.viewData)
-                } else {
-                    v.displayCurrencies(data.viewData)
+        val v = view
+        if (v != null) {
+            when (data.status) {
+                Status.RESULT -> {
+                    v.displayCurrencies()
+                    v.startInput()
                 }
+                Status.ERROR -> showError(data.error)
+                Status.UPDATE -> v.updateCurrencies(data.viewData)
             }
         }
     }

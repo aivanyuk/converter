@@ -1,7 +1,7 @@
 package com.aivanyuk.android.converter.view
 
-import android.support.v7.recyclerview.extensions.ListAdapter
 import android.support.v7.util.DiffUtil
+import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.aivanyuk.android.converter.ImageLoader
@@ -9,7 +9,8 @@ import com.aivanyuk.android.converter.R
 import com.aivanyuk.android.converter.presenter.CurrencyPresenter
 
 class CurrencyAdapter(private val currencyPresenter: CurrencyPresenter,
-                      private val imageLoader: ImageLoader) : ListAdapter<CurrencyViewData, CurrencyRowViewHolder>(DiffCallback) {
+                      private val imageLoader: ImageLoader) : RecyclerView.Adapter<CurrencyRowViewHolder>() {
+    override fun getItemCount() = currencyPresenter.getItemCount()
 
     override fun onCreateViewHolder(parent: ViewGroup, pos: Int): CurrencyRowViewHolder {
         return CurrencyRowViewHolder(currencyPresenter,
@@ -32,6 +33,8 @@ class CurrencyAdapter(private val currencyPresenter: CurrencyPresenter,
             currencyPresenter.onFullBind(vh, position)
         }
     }
+
+    override fun getItemId(position: Int) = currencyPresenter.getItemId(position)
 
     companion object DiffCallback : DiffUtil.ItemCallback<CurrencyViewData>() {
         override fun areItemsTheSame(p0: CurrencyViewData, p1: CurrencyViewData): Boolean {
