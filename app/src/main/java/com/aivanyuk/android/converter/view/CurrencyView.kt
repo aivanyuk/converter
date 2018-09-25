@@ -8,7 +8,7 @@ import com.aivanyuk.android.converter.R
 import com.aivanyuk.android.converter.presenter.CurrencyPresenter
 import com.aivanyuk.android.converter.ui.MainActivity
 
-class CurrencyView(val context: MainActivity, currencyPresenter: CurrencyPresenter, imageLoader: ImageLoader) {
+class CurrencyView(val context: MainActivity, val currencyPresenter: CurrencyPresenter, imageLoader: ImageLoader) {
     private val list: RecyclerView = context.findViewById(R.id.currency_list)
     private val listAdapter: CurrencyAdapter
 
@@ -34,6 +34,18 @@ class CurrencyView(val context: MainActivity, currencyPresenter: CurrencyPresent
 
     fun startInput() {
         list.scrollToPosition(0)
+        list.post(waiter)
     }
 
+    private val waiter = {
+        waitAnimations()
+    }
+
+    private fun waitAnimations() {
+        if (list.isAnimating) {
+            list.itemAnimator?.isRunning { list.post(waiter) }
+        } else {
+            currencyPresenter.showInput()
+        }
+    }
 }

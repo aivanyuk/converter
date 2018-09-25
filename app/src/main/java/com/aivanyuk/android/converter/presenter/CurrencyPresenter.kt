@@ -57,8 +57,11 @@ class CurrencyPresenter(private val repo: CurrencyRepo, val inputPresenter: Inpu
 
     fun requestPivot(pos: Int) {
         repo.setPivot(pos)
-        val selected = repo.getCached().viewData[pos]
-        inputPresenter.startInput(selected)
+    }
+
+    fun showInput() {
+        val selected = repo.getViewData(0)
+        inputPresenter.showInput(selected)
     }
 
     fun getItemCount(): Int {
@@ -66,7 +69,7 @@ class CurrencyPresenter(private val repo: CurrencyRepo, val inputPresenter: Inpu
     }
 
     fun getItemId(position: Int): Long {
-        return repo.getCached().viewData[position].name.hashCode().toLong()
+        return repo.getCached().viewData[position].id
     }
 }
 

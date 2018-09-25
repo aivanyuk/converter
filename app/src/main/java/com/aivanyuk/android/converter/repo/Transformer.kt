@@ -14,17 +14,21 @@ interface Transformer {
     fun transformModel(model: Model.Result): CurrencyData
     fun transformViewData(currencies: CurrencyData): CurrencyData
     fun setPivot(pivot: Int)
+    fun getPivot(): Int
 }
 
 class TransformerImpl : Transformer {
+    @Volatile
+    var pivotPos: Int = 0
 
-    @Volatile var pivotPos: Int = 0
-
-    @Volatile var order: List<String> = emptyList()
+    @Volatile
+    var order: List<String> = emptyList()
 
     override fun setPivot(pivot: Int) {
         pivotPos = pivot
     }
+
+    override fun getPivot() = pivotPos
 
     @WorkerThread
     override fun transformModel(model: Model.Result): CurrencyData {
@@ -35,7 +39,7 @@ class TransformerImpl : Transformer {
         } else {
             listOf(EUR) + list
         }
-        val viewData = dto.map { CurrencyViewData(it.name, it.formattedAmount, it.flagUrl, it.description) }
+        val viewData = dto.map { CurrencyViewData(it.name, it.formattedAmount, it.flagUrl, it.description, it.name.hashCode().toLong()) }
         return CurrencyData(Status.RESULT, dto, viewData)
     }
 

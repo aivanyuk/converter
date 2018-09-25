@@ -21,15 +21,15 @@ interface CurrencyRepo {
     fun getViewData(position: Int): CurrencyViewData
 }
 
-class CurrencyRepoImpl(private val transformer: Transformer) : CurrencyRepo {
-    override fun getViewData(position: Int) = cache.viewData[position]
-
+class CurrencyRepoImpl(private val transformer: Transformer,
+                       private val currencyService: CurrencyService) : CurrencyRepo {
     var sub: CompositeDisposable = CompositeDisposable()
 
     val publisher = PublishSubject.create<CurrencyData>()
+
     var cache = CurrencyData.EMPTY
 
-    val currencyService by lazy { CurrencyService.create() }
+    override fun getViewData(position: Int) = cache.viewData[position]
 
     override fun fetchStart() {
         val disposable = Observable.interval(0, 2, TimeUnit.SECONDS).flatMap { currencyService.getCurrencies("EUR") }

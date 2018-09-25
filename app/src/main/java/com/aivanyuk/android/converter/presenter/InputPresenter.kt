@@ -10,7 +10,7 @@ class InputPresenter {
         view = inputView
     }
 
-    fun startInput(selected: CurrencyViewData) {
+    fun showInput(selected: CurrencyViewData) {
         view.display(selected)
     }
 
