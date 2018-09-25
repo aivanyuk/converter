@@ -21,7 +21,7 @@ class InputView(sourceView: MainActivity, val inputPresenter: InputPresenter, im
     private val textWatcher = object : TextWatcher {
         override fun afterTextChanged(s: Editable?) {
 
-            val value = if (s == null) "" else s.toString()
+            val value = s?.toString() ?: ""
             if (value.isBlank()) {
                 s?.replace(0, 0, EMPTY_VALUE)
             } else {
@@ -38,7 +38,7 @@ class InputView(sourceView: MainActivity, val inputPresenter: InputPresenter, im
                 }
                 if (valid) {
                     try {
-                        val amount = value.toDouble()
+                        val amount = value.toFloat()
                         inputPresenter.onAmount(amount)
                     } catch (ex: NumberFormatException) {
                         Log.e(TAG, "A very strange number", ex)

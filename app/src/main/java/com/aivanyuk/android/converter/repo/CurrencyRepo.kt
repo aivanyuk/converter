@@ -19,6 +19,7 @@ interface CurrencyRepo {
     fun fetchStop()
     fun setPivot(pos: Int)
     fun getViewData(position: Int): CurrencyViewData
+    fun onAmount(amount: Float)
 }
 
 class CurrencyRepoImpl(private val transformer: Transformer,
@@ -35,7 +36,8 @@ class CurrencyRepoImpl(private val transformer: Transformer,
         val disposable = Observable.interval(0, 2, TimeUnit.SECONDS).flatMap { currencyService.getCurrencies("EUR") }
                 .subscribeOn(Schedulers.io())
                 .map { model: Model.Result -> transformer.transformModel(model) }
-                .map { currencies -> transformer.transformViewData(currencies) }
+                .map { data -> transformer.prepareViewData(data) }
+                .map { data -> transformer.reorderViewData(data) }
                 .onErrorReturn { error -> CurrencyData.errorValue(error.message) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -81,11 +83,31 @@ class CurrencyRepoImpl(private val transformer: Transformer,
         val disposable = Observable.just(cache)
                 .subscribeOn(Schedulers.computation())
                 .doOnNext { data ->
-                    val currency = data.viewData[pos]
-                    val indexOfFirst = data.currencies.indexOfFirst { it.name == currency.name }
-                    transformer.setPivot(indexOfFirst)
+                    val selectedView = data.viewData[pos]
+                    val currencyPos = data.currencies.indexOfFirst { it.name == selectedView.name }
+                    transformer.setPivot(currencyPos)
                 }
-                .map { transformer.transformViewData(it) }
+                //TODO: get rid of operator duplication
+                .map { data -> transformer.prepareViewData(data) }
+                .map { data -> transformer.reorderViewData(data) }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    emitResult(it)
+                }
+        sub.add(disposable)
+    }
+
+    override fun onAmount(amount: Float) {
+        val disposable = Observable.just(cache)
+                .subscribeOn(Schedulers.computation())
+                .doOnNext {data ->
+                    val selectedView = data.viewData[0]
+                    val currency = data.currencies.first { it.name == selectedView.name }
+                    val base = amount / currency.rate
+                    transformer.setBaseAmount(base)
+                }
+                .map { data -> transformer.prepareViewData(data) }
+                .map { data -> transformer.reorderViewData(data) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
                     emitResult(it)

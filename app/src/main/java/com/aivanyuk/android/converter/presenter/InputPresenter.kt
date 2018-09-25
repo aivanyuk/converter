@@ -1,9 +1,10 @@
 package com.aivanyuk.android.converter.presenter
 
+import com.aivanyuk.android.converter.repo.CurrencyRepo
 import com.aivanyuk.android.converter.view.CurrencyViewData
 import com.aivanyuk.android.converter.view.InputView
 
-class InputPresenter {
+class InputPresenter(val repo: CurrencyRepo) {
     lateinit var view: InputView
 
     fun setInputView(inputView: InputView) {
@@ -14,8 +15,8 @@ class InputPresenter {
         view.display(selected)
     }
 
-    fun onAmount(amount: Double) {
-
+    fun onAmount(amount: Float) {
+        repo.onAmount(amount)
     }
 
     fun onHide() {

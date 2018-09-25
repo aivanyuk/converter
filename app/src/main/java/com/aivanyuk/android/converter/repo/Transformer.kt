@@ -12,9 +12,10 @@ import java.text.DecimalFormat
 
 interface Transformer {
     fun transformModel(model: Model.Result): CurrencyData
-    fun transformViewData(currencies: CurrencyData): CurrencyData
+    fun prepareViewData(currencies: CurrencyData): CurrencyData
+    fun reorderViewData(currencies: CurrencyData): CurrencyData
     fun setPivot(pivot: Int)
-    fun getPivot(): Int
+    fun setBaseAmount(base: Float)
 }
 
 class TransformerImpl : Transformer {
@@ -24,23 +25,38 @@ class TransformerImpl : Transformer {
     @Volatile
     var order: List<String> = emptyList()
 
+    @Volatile
+    var amountEur: Float = 1.0f
+
     override fun setPivot(pivot: Int) {
         pivotPos = pivot
     }
 
-    override fun getPivot() = pivotPos
+    override fun setBaseAmount(base: Float) {
+        amountEur = base
+    }
 
     @WorkerThread
     override fun transformModel(model: Model.Result): CurrencyData {
-        val list = model.rates?.entries?.map { CurrencyDto(it.key, "", it.value, getFlag(it.key), Formatter.formatAmount(it.value)) }
+        val list = model.rates?.entries?.map { CurrencyDto(it.key, "", it.value, getFlag(it.key)) }
         val dto: List<CurrencyDto>
         dto = if (list == null) {
             emptyList()
         } else {
             listOf(EUR) + list
         }
-        val viewData = dto.map { CurrencyViewData(it.name, it.formattedAmount, it.flagUrl, it.description, it.name.hashCode().toLong()) }
-        return CurrencyData(Status.RESULT, dto, viewData)
+        return CurrencyData(Status.RESULT, dto, emptyList())
+    }
+
+    @WorkerThread
+    override fun prepareViewData(currencies: CurrencyData): CurrencyData {
+        val viewData = currencies.currencies.map { CurrencyViewData(it.name,
+                Formatter.formatAmount(it.rate * amountEur),
+                it.flagUrl,
+                it.description,
+                it.name.hashCode().toLong())
+        }
+        return CurrencyData(Status.RESULT, currencies.currencies, viewData)
     }
 
     private fun getFlag(key: String): String {
@@ -48,7 +64,7 @@ class TransformerImpl : Transformer {
     }
 
     @WorkerThread
-    override fun transformViewData(currencies: CurrencyData): CurrencyData {
+    override fun reorderViewData(currencies: CurrencyData): CurrencyData {
         val viewData = currencies.viewData
         val reordered = listOf(viewData[pivotPos]) + viewData.subList(0, pivotPos) + viewData.subList(pivotPos + 1, viewData.size)
         val emissionOrder = reordered.map { it.name }

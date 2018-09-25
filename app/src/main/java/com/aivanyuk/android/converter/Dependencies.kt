@@ -13,7 +13,7 @@ const val UI_SCOPE = "ui"
 val appModule = module {
     single<CurrencyRepo> { CurrencyRepoImpl(get(), get()) }
     scope(UI_SCOPE) { CurrencyPresenter(get(), get()) }
-    scope(UI_SCOPE) { InputPresenter() }
+    scope(UI_SCOPE) { InputPresenter(get()) }
     single<ImageLoader> { ImageLoaderImpl() }
     single<Transformer> { TransformerImpl() }
     single { CurrencyService.create() }
