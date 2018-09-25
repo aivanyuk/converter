@@ -14,7 +14,7 @@ class InputPresenter {
         view.display(selected)
     }
 
-    fun onAmount(s: CharSequence?) {
+    fun onAmount(amount: Double) {
 
     }
 
