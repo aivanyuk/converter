@@ -8,7 +8,7 @@ import com.aivanyuk.android.converter.view.CurrencyView
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
 
-class CurrencyPresenter(private val repo: CurrencyRepo) {
+class CurrencyPresenter(private val repo: CurrencyRepo, val inputPresenter: InputPresenter) {
 
     private val dataObserver: DataObserver = DataObserver()
     private val compositeDisposable = CompositeDisposable()
@@ -19,7 +19,7 @@ class CurrencyPresenter(private val repo: CurrencyRepo) {
         compositeDisposable.add(repo.currencies().subscribeWith(dataObserver))
     }
 
-    fun create() {
+    fun onCreate() {
         repo.fetchStart()
     }
 
@@ -32,7 +32,7 @@ class CurrencyPresenter(private val repo: CurrencyRepo) {
         }
     }
 
-    fun destroy() {
+    fun onDestroy() {
         repo.fetchStop()
         compositeDisposable.clear()
     }
@@ -57,6 +57,8 @@ class CurrencyPresenter(private val repo: CurrencyRepo) {
 
     fun requestPivot(pos: Int) {
         repo.setPivot(pos)
+        val selected = repo.getCached().viewData[pos]
+        inputPresenter.startInput(selected)
     }
 
     fun getItemCount(): Int {

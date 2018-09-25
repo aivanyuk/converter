@@ -6,7 +6,9 @@ import com.aivanyuk.android.converter.ImageLoader
 import com.aivanyuk.android.converter.R
 import com.aivanyuk.android.converter.UI_SCOPE
 import com.aivanyuk.android.converter.presenter.CurrencyPresenter
+import com.aivanyuk.android.converter.presenter.InputPresenter
 import com.aivanyuk.android.converter.view.CurrencyView
+import com.aivanyuk.android.converter.view.InputView
 import org.koin.android.ext.android.inject
 import org.koin.android.scope.ext.android.bindScope
 import org.koin.android.scope.ext.android.createScope
@@ -14,6 +16,7 @@ import org.koin.android.scope.ext.android.createScope
 class MainActivity : AppCompatActivity() {
 
     private val currencyPresenter: CurrencyPresenter by inject()
+    private val inputPresenter: InputPresenter by inject()
     private val imageLoader: ImageLoader by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,12 +26,15 @@ class MainActivity : AppCompatActivity() {
         bindScope(createScope(UI_SCOPE))
 
         val view = CurrencyView(this, currencyPresenter, imageLoader)
-        currencyPresenter.create()
+        currencyPresenter.onCreate()
         currencyPresenter.setView(view)
+
+        val inputView = InputView(this, inputPresenter, imageLoader)
+        inputPresenter.setInputView(inputView)
     }
 
     override fun onDestroy() {
-        currencyPresenter.destroy()
+        currencyPresenter.onDestroy()
         super.onDestroy()
     }
 }
