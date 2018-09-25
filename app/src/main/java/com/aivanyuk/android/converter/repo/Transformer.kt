@@ -50,8 +50,12 @@ class TransformerImpl : Transformer {
 
     @WorkerThread
     override fun prepareViewData(currencies: CurrencyData): CurrencyData {
-        val viewData = currencies.currencies.map { CurrencyViewData(it.name,
-                Formatter.formatAmount(it.rate * amountEur),
+        val viewData = currencies.currencies.map {
+            val amount = it.rate * amountEur
+            val amountFormatted = if (amountEur == 0f) "0" else Formatter.formatAmount(amount)
+            CurrencyViewData(
+                it.name,
+                amountFormatted,
                 it.flagUrl,
                 it.description,
                 it.name.hashCode().toLong())
@@ -77,6 +81,6 @@ class TransformerImpl : Transformer {
 
 object Formatter {
 
-    private val AMOUNT_FORMAT = DecimalFormat("#.00")
+    private val AMOUNT_FORMAT = DecimalFormat("#0.00")
     fun formatAmount(amount: Float) = AMOUNT_FORMAT.format(amount)!!
 }
