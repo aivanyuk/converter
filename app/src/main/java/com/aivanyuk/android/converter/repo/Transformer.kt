@@ -1,5 +1,6 @@
 package com.aivanyuk.android.converter.repo
 
+import android.support.annotation.WorkerThread
 import com.aivanyuk.android.converter.data.data.Flags
 import com.aivanyuk.android.converter.data.data.Model
 import com.aivanyuk.android.converter.data.dto.CurrencyData
@@ -18,13 +19,14 @@ interface Transformer {
 class TransformerImpl : Transformer {
 
     @Volatile var pivotPos: Int = 0
-    @Volatile var scheduledUpdate = true
+
+    @Volatile var order: List<String> = emptyList()
 
     override fun setPivot(pivot: Int) {
         pivotPos = pivot
-        scheduledUpdate = true
     }
 
+    @WorkerThread
     override fun transformModel(model: Model.Result): CurrencyData {
         val list = model.rates?.entries?.map { CurrencyDto(it.key, "", it.value, getFlag(it.key), Formatter.formatAmount(it.value)) }
         val dto: List<CurrencyDto>
@@ -41,11 +43,13 @@ class TransformerImpl : Transformer {
         return Flags.get(key)
     }
 
+    @WorkerThread
     override fun transformViewData(currencies: CurrencyData): CurrencyData {
-        val restructured = scheduledUpdate
-        scheduledUpdate = false
         val viewData = currencies.viewData
         val reordered = listOf(viewData[pivotPos]) + viewData.subList(0, pivotPos) + viewData.subList(pivotPos + 1, viewData.size)
+        val emissionOrder = reordered.map { it.name }
+        val restructured = order != emissionOrder
+        order = emissionOrder
         val result = if (restructured) Status.RESULT else Status.UPDATE
         return CurrencyData(result, currencies.currencies, reordered, currencies.error)
     }
