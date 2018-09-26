@@ -2,6 +2,7 @@ package com.aivanyuk.android.converter.view
 
 import android.graphics.Color
 import android.support.annotation.ColorInt
+import android.text.InputType
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
@@ -56,5 +57,11 @@ class CurrencyItemViewImpl(val itemView: View, val imageLoader: ImageLoader) : C
 
     fun setBackground(@ColorInt color: Int) {
         itemView.setBackgroundColor(color)
+    }
+
+    fun setEditable() {
+        input.isFocusable = true
+        input.isFocusableInTouchMode = true
+        input.isCursorVisible = true
     }
 }

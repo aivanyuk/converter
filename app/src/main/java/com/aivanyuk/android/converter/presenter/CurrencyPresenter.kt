@@ -13,7 +13,6 @@ class CurrencyPresenter(private val repo: CurrencyRepo, val inputPresenter: Inpu
     private val dataObserver: DataObserver = DataObserver()
     private val compositeDisposable = CompositeDisposable()
     private lateinit var view: CurrencyView
-    private val editorPos = 0
 
     init {
         compositeDisposable.add(repo.currencies().subscribeWith(dataObserver))
@@ -49,10 +48,8 @@ class CurrencyPresenter(private val repo: CurrencyRepo, val inputPresenter: Inpu
 
 
     fun onUpdateBind(vh: CurrencyItemView, position: Int) {
-        if (position != editorPos) {
-            val currency = repo.getViewData(position)
-            vh.setAmount(currency.amount)
-        }
+        val currency = repo.getViewData(position)
+        vh.setAmount(currency.amount)
     }
 
     fun requestPivot(pos: Int) {

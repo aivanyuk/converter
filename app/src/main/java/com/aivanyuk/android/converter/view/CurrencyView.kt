@@ -38,10 +38,10 @@ class CurrencyView(val context: MainActivity, val currencyPresenter: CurrencyPre
     }
 
     private val waiter = {
-        waitAnimations()
+        waitForAnimations()
     }
 
-    private fun waitAnimations() {
+    private fun waitForAnimations() {
         if (list.isAnimating) {
             list.itemAnimator?.isRunning { list.post(waiter) }
         } else {

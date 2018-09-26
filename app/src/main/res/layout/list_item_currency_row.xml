@@ -56,6 +56,10 @@
         app:layout_constraintStart_toEndOf="@id/text_description"
         app:layout_constraintEnd_toEndOf="parent"
         android:inputType="numberDecimal"
+        android:focusable="false"
+        android:maxLength="13"
+        android:focusableInTouchMode="false"
+        android:cursorVisible="false"
         android:text="@string/text_default_amount"
         tools:text="1.00"
         />

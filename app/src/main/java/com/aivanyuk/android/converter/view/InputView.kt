@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.View
 import android.view.inputmethod.InputMethodManager
 import com.aivanyuk.android.converter.ImageLoader
 import com.aivanyuk.android.converter.R
@@ -30,6 +31,7 @@ class InputView(sourceView: MainActivity, val inputPresenter: InputPresenter, im
     }
 
     private val view: CurrencyItemViewImpl = CurrencyItemViewImpl(sourceView.findViewById(R.id.input_view), imageLoader)
+    private val touchInterceptor: View = sourceView.findViewById(R.id.touch_interceptor)
 
     private val imm: InputMethodManager = sourceView.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
 
@@ -39,20 +41,24 @@ class InputView(sourceView: MainActivity, val inputPresenter: InputPresenter, im
         view.setDescription(selected.description)
         view.setImage(selected.flagUrl)
         view.setBackground(Color.WHITE)
+        view.setEditable()
         view.show()
 
         view.input.requestFocus()
         imm.showSoftInput(view.input, InputMethodManager.SHOW_IMPLICIT)
-
-        view.input.setOnFocusChangeListener { v, hasFocus ->
-            if (!hasFocus) {
-                inputPresenter.onHide()
-            }
-        }
         view.input.addTextChangedListener(textWatcher)
+
+        touchInterceptor.visibility = View.VISIBLE
+        touchInterceptor.setOnTouchListener { v, event ->
+            inputPresenter.onHide()
+            return@setOnTouchListener false
+        }
     }
 
     fun hide() {
+        touchInterceptor.visibility = View.GONE
+        touchInterceptor.setOnTouchListener(null)
+        imm.hideSoftInputFromWindow(view.input.windowToken, 0)
         view.hide()
     }
 }
