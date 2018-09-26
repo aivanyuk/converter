@@ -53,7 +53,12 @@ class CurrencyPresenter(private val repo: CurrencyRepo, val inputPresenter: Inpu
     }
 
     fun requestPivot(pos: Int) {
-        repo.setPivot(pos)
+        if (pos == 0) {
+            // TODO: remove a workaround for update logic, should be more states of data received
+            showInput()
+        } else {
+            repo.setPivot(pos)
+        }
     }
 
     fun showInput() {

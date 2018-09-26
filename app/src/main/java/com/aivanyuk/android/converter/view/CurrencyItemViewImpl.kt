@@ -1,8 +1,6 @@
 package com.aivanyuk.android.converter.view
 
-import android.graphics.Color
 import android.support.annotation.ColorInt
-import android.text.InputType
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
@@ -12,8 +10,6 @@ import com.aivanyuk.android.converter.R
 
 class CurrencyItemViewImpl(val itemView: View, val imageLoader: ImageLoader) : CurrencyItemView {
     val imageSizeW: Int = itemView.resources.getDimensionPixelSize(R.dimen.image_flag_size_w)
-
-
 
     val imageSizeH: Int = itemView.resources.getDimensionPixelSize(R.dimen.image_flag_size_h)
     val icon = itemView.findViewById<ImageView>(R.id.icon)
