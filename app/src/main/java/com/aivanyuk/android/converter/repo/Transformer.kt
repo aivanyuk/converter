@@ -15,7 +15,7 @@ interface Transformer {
     fun prepareViewData(currencies: CurrencyData): CurrencyData
     fun reorderViewData(currencies: CurrencyData): CurrencyData
     fun setPivot(pivot: Int)
-    fun setBaseAmount(base: Float)
+    fun setBaseAmount(base: Float, currency: String)
 }
 
 class TransformerImpl : Transformer {
@@ -26,14 +26,17 @@ class TransformerImpl : Transformer {
     var order: List<String> = emptyList()
 
     @Volatile
-    var amountEur: Float = 1.0f
+    var amount: Float = EUR.rate
+    @Volatile
+    var baseCurrency: String = EUR.name
 
     override fun setPivot(pivot: Int) {
         pivotPos = pivot
     }
 
-    override fun setBaseAmount(base: Float) {
-        amountEur = base
+    override fun setBaseAmount(base: Float, currency: String) {
+        amount = base
+        baseCurrency = currency
     }
 
     @WorkerThread
@@ -50,9 +53,11 @@ class TransformerImpl : Transformer {
 
     @WorkerThread
     override fun prepareViewData(currencies: CurrencyData): CurrencyData {
+        val (_, _, rate, _) = currencies.currencies.first { it.name == baseCurrency }
+        val inEur = amount / rate
         val viewData = currencies.currencies.map {
-            val amount = it.rate * amountEur
-            val amountFormatted = if (amountEur == 0f) "0" else Formatter.formatAmount(amount)
+            val amount = inEur * it.rate
+            val amountFormatted = if (this.amount == 0f) "0" else Formatter.formatAmount(amount)
             CurrencyViewData(
                 it.name,
                 amountFormatted,

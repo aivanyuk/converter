@@ -33,7 +33,7 @@ class CurrencyRepoImpl(private val transformer: Transformer,
     override fun getViewData(position: Int) = cache.viewData[position]
 
     override fun fetchStart() {
-        val disposable = Observable.interval(0, 2, TimeUnit.SECONDS).flatMap { currencyService.getCurrencies("EUR") }
+        val disposable = Observable.interval(0, 1, TimeUnit.SECONDS).flatMap { currencyService.getCurrencies("EUR") }
                 .subscribeOn(Schedulers.io())
                 .map { model: Model.Result -> transformer.transformModel(model) }
                 .map { data -> transformer.prepareViewData(data) }
@@ -103,8 +103,7 @@ class CurrencyRepoImpl(private val transformer: Transformer,
                 .doOnNext {data ->
                     val selectedView = data.viewData[0]
                     val currency = data.currencies.first { it.name == selectedView.name }
-                    val base = amount / currency.rate
-                    transformer.setBaseAmount(base)
+                    transformer.setBaseAmount(amount, currency.name)
                 }
                 .map { data -> transformer.prepareViewData(data) }
                 .map { data -> transformer.reorderViewData(data) }
